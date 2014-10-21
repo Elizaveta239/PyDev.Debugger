@@ -258,7 +258,7 @@ def handshake():
 #=======================================================================================================================
 # StartServer
 #=======================================================================================================================
-def start_server(host, port, interpreter):
+def start_server(host, port, client_port):
     if port == 0:
         host = ''
 
@@ -320,12 +320,23 @@ def StartServer(host, port, client_port):
 
 def get_interpreter():
     try:
-        interpreterInterface = getattr(__builtin__, 'interpreter')
+        interpreter = getattr(__builtin__, 'interpreter')
     except AttributeError:
-        interpreterInterface = InterpreterInterface(None, None, threading.currentThread())
-        setattr(__builtin__, 'interpreter', interpreterInterface)
+        #replace exit (see comments on method)
+        #note that this does not work in jython!!! (sys method can't be replaced).
+        from pydevd import SetupHolder, debugger
+        setup = SetupHolder.setup
+        host = setup['client']
 
-    return interpreterInterface
+        sys.exit = DoExit
+        interpreter = InterpreterInterface(None, None, threading.currentThread())
+        start_new_thread(start_server, (host, 0, interpreter))
+        start_new_thread(process_exec_queue, (interpreter,))
+
+        # interpreterInterface = InterpreterInterface(None, None, threading.currentThread())
+        setattr(__builtin__, 'interpreter', interpreter)
+
+    return interpreter
 
 
 def get_completions(text, token, globals, locals):
