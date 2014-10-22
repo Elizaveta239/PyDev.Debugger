@@ -19,7 +19,7 @@ class ImportHookManager(ModuleType):
             # fake impossible value; default value depends on version
             if IS_PY24:
                 # the level parameter was added in version 2.5
-                return self._system_import(import_name, globals, locals, fromlist)
+                return self._system_import(name, globals, locals, fromlist)
             elif IS_PY3K:
                 # default value for level parameter in python 3
                 level = 0
